@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="pl"><head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>KWARTAŁ P00A-R02 — pobierz</title>
+<style>
+body{font-family:system-ui,sans-serif;margin:2rem;background:#0b1220;color:#e8eefc}
+button,a.btn{display:inline-block;padding:1rem 1.4rem;font-size:1.1rem;border:0;border-radius:12px;
+background:#3b82f6;color:#fff;text-decoration:none;cursor:pointer}
+button:disabled{opacity:.5}
+p{line-height:1.5;opacity:.9}
+.ok{color:#4ade80} .err{color:#f87171}
+</style></head><body>
+<h1>KWARTAŁ P00A-R02</h1>
+<p>Status: <strong class="ok">PASS</strong> (M01c BLOCKED = placeholdery P00C).</p>
+<p>Paczka summary na telefon (~61&nbsp;KB: CSV, raporty, JSON).</p>
+<p><button id="dl" type="button">Pobierz ZIP</button></p>
+<p id="st">Gotowe do pobrania.</p>
+<script>
+const PARTS = ['part-00.b64', 'part-01.b64', 'part-02.b64', 'part-03.b64', 'part-04.b64'];
+async function go(){
+  const btn=document.getElementById('dl');
+  const st=document.getElementById('st');
+  btn.disabled=true; st.textContent='Ładuję…';
+  try {
+    let b64='';
+    for (const p of PARTS) {
+      st.textContent='Ładuję '+p+'…';
+      const r=await fetch(p); if(!r.ok) throw new Error(p+' HTTP '+r.status);
+      b64 += (await r.text()).trim();
+    }
+    const bin=atob(b64);
+    const u8=new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++) u8[i]=bin.charCodeAt(i);
+    const blob=new Blob([u8],{type:'application/zip'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='KWARTAL-P00A-R02-SUMMARY-PHONE.zip';
+    document.body.appendChild(a); a.click(); a.remove();
+    st.innerHTML='<span class="ok">Pobrano.</span> Pełny ZIP ze screenshotami (5,3&nbsp;MB) jest w czacie Grok Bot.';
+  } catch(e) {
+    st.innerHTML='<span class="err">Błąd: '+e.message+'</span>';
+    btn.disabled=false;
+  }
+}
+document.getElementById('dl').onclick=go;
+</script>
+</body></html>
